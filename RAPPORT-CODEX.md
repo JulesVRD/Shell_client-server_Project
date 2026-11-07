@@ -1,54 +1,88 @@
-# Rapport Codex — reprise LO14 2026–2027
+# Rapport Codex — réseau virtuel LO14 2026–2027
 
-## Mandat et périmètre
+## Mandat et état initial
 
-Demande directe de Selyan : conserver le même dépôt, archiver le travail sur le
-mauvais sujet et préparer une nouvelle base Bash pour le sujet 2026–2027.
-Aucun brief Opus créé. Il s'agit d'une base de départ, pas du projet fonctionnel.
+Selyan a demandé de poursuivre après la création de la base, puis a explicitement
+validé le stockage du réseau virtuel dans des fichiers locaux.
 
-## Relevé initial
+Worktree : `/Users/selyan/Documents/Codex/2026-11-07/j/outputs/Shell_client-server_Project`.
+Branche : `codex/rvsh-2026-2027`.
+HEAD au début de cette tranche : `ef4cf3aa8f8d2fe51e0b0cd5060b3506a7d352ef`.
+`git status --short --branch` : `## codex/rvsh-2026-2027`, arbre propre.
+Recon : historique, fichiers du lanceur, tests et cahier des charges relus.
+Aucun autre AGENTS.md ou brief présent dans ce clone.
 
-- Dépôt : `https://github.com/JulesVRD/Shell_client-server_Project`.
-- HEAD et branche récupérés : `2a93ae5616736f44fddcdc6c077420f8f71e81a0`, `main`.
-- `git status --short --branch` : `## main...origin/main`, aucun changement local.
-- `git log --oneline -20` : deux commits, `2a93ae5` et `e1e84b5`.
-- Recon : lecture du README, de `src/client/vsh.c` et de `src/server/server.c`.
-  Le README et le code confirment le sujet serveur d'archives en C/TCP.
-- `relay-check.py` : aucun pair observé, mais `concurrence non vérifiée
-  (ps indisponible)`. Ce constat n'est pas une preuve d'exclusivité.
-- Clone initial dans `work/`, déplacé dans le dossier de livraison avant édition.
+La reprise initiale est conservée dans `ef4cf3a`. L'ancien projet reste sur
+`archive/vsh-2025-2026`, `main` et `origin/main`, tous au SHA
+`2a93ae5616736f44fddcdc6c077420f8f71e81a0`.
 
-## Travail réalisé
+## Réalisation
 
-- Branche locale `archive/vsh-2025-2026` créée au SHA initial : ancien projet intact.
-- Branche locale `codex/rvsh-2026-2027` créée depuis le même historique.
-- Retrait des fichiers propres au C/TCP et aux archives sur cette nouvelle branche.
-  Ces fichiers restent conservés sur `main`, la branche d'archive et dans l'historique.
-- Point d'entrée exécutable `rvsh` : aide, modes, validation des arguments.
-- Remplacement du Makefile de compilation C par des raccourcis de vérification Bash.
-- README réécrit, exigences du bon sujet recensées, questions ouvertes indiquées.
-- PDF d'origine copié sans modification dans `docs/`.
-- Documentation de reprise et de publication manuelle ; sauvegarde Git `.bundle`
-  livrée à côté du dépôt après le commit local.
+- Initialisation interactive du mot de passe administrateur et de `hostroot`.
+- Authentification, vérification des droits et refus des accès invalides.
+- Stockage local privé, mot de passe SHA-512 crypt salé via OpenSSL et
+  verrouillage des accès partagés par `flock`.
+- Protection contre l'utilisation accidentelle d'un dossier de données contenant
+  des fichiers sans rapport avec rvsh.
+- Administration : `host`, `user`, droits grant/revoke et changement du mot de
+  passe d'un utilisateur par l'administrateur.
+- Sessions : `who`, `rusers`, `rhost`, `rconnect`, connexions imbriquées et `exit`.
+- Identités et informations : `su`, `passwd`, `finger`, `afinger`.
+- Messagerie : `write`, `wall`, `wall -n`, notification en arrière-plan et
+  livraison différée à la première reconnexion d'un compte hors ligne.
+- Plusieurs sessions distinctes du même compte sur la même machine.
+- Nettoyage des sessions à la fermeture et suppression des sessions dont le
+  processus est mort à la consultation ou lors d'un envoi.
+- Tests CLI, tests d'intégration par pseudo-terminaux, environnement Docker Linux,
+  README avec guide de démarrage et démonstration à deux terminaux.
 
-## Ce qui reste à développer
+Le code du programme reste en Bash. Python est utilisé uniquement dans les tests.
+Aucun mot de passe réel n'a été créé : les tests utilisent des comptes synthétiques
+et un stockage temporaire supprimé après chaque scénario.
 
-Toute la logique du réseau virtuel : initialisation, comptes, mots de passe,
-droits, sessions, commandes connect/admin et messagerie. Les modes `-connect`
-et `-admin` retournent volontairement 3 avec « non implémenté » ; aucun prompt
-authentifié factice ni mot de passe prédéfini n'a été ajouté.
+## Choix de comportement
 
-Le stockage, les interfaces entre modules, la concurrence et le mécanisme de
-messagerie restent à décider ensemble. Voir `docs/CAHIER-DES-CHARGES.md`.
+Le stockage local a été validé par Selyan. Les détails d'interface retenus sont
+consignés dans le README et le cahier des charges : noms simples, connexions
+imbriquées conservées jusqu'à leur `exit`, diffusion à toutes les sessions
+correspondantes, retrait d'un droit et suppression refusés pendant son utilisation.
+Ces règles restent à relire à deux et, si nécessaire, à confirmer avec l'enseignant.
 
-## Preuves de validation
+## Preuves
 
-Environnement exécuté : macOS arm64, GNU Bash 3.2.57. Linux n'a pas été testé.
+### Analyse statique et syntaxe
 
-Commande : `make test` (inclut `bash -n rvsh tests/cli.sh`). Sortie :
+Commande : `make lint`.
 
 ```text
-bash -n rvsh tests/cli.sh
+shellcheck -x -a rvsh tests/cli.sh
+```
+
+Code 0, aucun diagnostic. Les modules sourcés sont aussi analysés grâce à `-a`.
+Syntaxe vérifiée par `bash -n` sur le lanceur, les modules et le test CLI.
+Commande : `git diff --check` : code 0, sortie vide.
+
+### Exécution réelle sous Linux
+
+L'image de test locale est construite depuis `tests/Dockerfile`, basée sur
+`python:3.12-alpine`, avec Bash 5.3.9, OpenSSL 3.5.9 et flock/util-linux 2.42.3.
+Aucun paquet n'a été installé globalement sur la machine.
+
+Commandes exécutées :
+
+```bash
+docker build -t rvsh-tests:local -f tests/Dockerfile .
+docker run --rm --network none --read-only --tmpfs /tmp:rw,nosuid,nodev \
+  -v /Users/selyan/Documents/Codex/2026-11-07/j/outputs/Shell_client-server_Project:/project:ro \
+  -w /project rvsh-tests:local make test
+```
+
+Le code est monté en lecture seule ; les données de test sont dans `/tmp` du
+conteneur et le conteneur d'exécution n'a pas de réseau.
+
+Sortie finale :
+
+```text
 bash tests/cli.sh
 OK : aide longue
 OK : aide courte
@@ -61,33 +95,51 @@ OK : machine seule refusée
 OK : machine vide refusée
 OK : utilisateur vide refusé
 OK : arguments superflus connect
-OK : connect annonce son état réel
-OK : admin annonce son état réel
-13 vérifications réussies.
+11 vérifications réussies.
+python3 tests/integration.py
+test_connexions_imbriquees_su_et_mot_de_passe_global ... ok
+test_dossier_existant_etranger_refuse_sans_modification ... ok
+test_initialisation_authentification_et_permissions ... ok
+test_initialisation_incomplete_et_mode_sans_reseau ... ok
+test_modifications_concurrentes_et_session_tuee ... ok
+test_refus_droits_noms_et_suppression_en_cours ... ok
+test_sessions_multiples_messages_et_livraison_differee ... ok
+
+Ran 7 tests in 6.033s
+
+OK
 ```
 
-Commande : `git diff --check`. Sortie vide, code 0.
+Ces scénarios vérifient notamment : A → B → C et retours, `su` sur la même machine,
+changement global et redéfinition admin du mot de passe, double connexion,
+réception de `write` et `wall` sans action du destinataire, `wall -n` reçu une
+seule fois après reconnexion, opérations concurrentes sur les droits, refus
+d'accès et d'injection de commandes, SIGTERM et nettoyage après SIGKILL.
 
-Commande : `shasum -a 256 docs/LO14-Projet-2026-2027.pdf
-/Users/selyan/Downloads/LO14-Projet-2026-2027.pdf`.
-Les deux fichiers ont la même empreinte :
+### Git et concurrence
 
-```text
-cc5ef3f4d46bf506cd185aff3c08d4ada851f9b783476b7f1714635b38fdb047
-```
+Avant validation, HEAD reste `ef4cf3a`, sur la branche dédiée, avec uniquement les
+changements de cette tranche. `main`, `origin/main` et la branche d'archive
+restent au SHA initial `2a93ae5`.
+`relay-check.py` ne signale aucun pair ; il précise toutefois
+`concurrence non vérifiée (ps indisponible)`. Ce relevé n'est pas un verrou.
+La livraison est commitée localement, puis la sauvegarde `rvsh-reprise.bundle`
+est actualisée et vérifiée.
 
-Avant validation : `git rev-parse archive/vsh-2025-2026 main origin/main`
-renvoie trois fois `2a93ae5616736f44fddcdc6c077420f8f71e81a0`.
-Branche de travail : `codex/rvsh-2026-2027` ; modifications limitées à cette reprise.
-Worktree de livraison :
-`/Users/selyan/Documents/Codex/2026-11-07/j/outputs/Shell_client-server_Project`.
+## Limites et actions restantes
 
-## Actions humaines restantes
+- La cible d'exécution est Linux. La syntaxe Bash est aussi vérifiée sous Bash
+  3.2 du poste macOS ; le programme n'est pas exécuté nativement sous macOS,
+  où flock est absent. Le README décrit une démonstration via un conteneur partagé.
+- Les notifications peuvent couper visuellement le prompt en cours de saisie.
+- L'identification des processus repose sur leurs PID locaux. Un redémarrage ou
+  une réutilisation de PID peut nécessiter de vérifier les sessions résiduelles.
+  Le projet simule un réseau sur un hôte ; il ne vise pas l'isolation entre
+  différents comptes du système d'exploitation.
+- Aucun test ne prouve l'absence de tout défaut. Une démonstration manuelle à deux
+  sur votre Linux/WSL et une relecture du code restent à effectuer.
+- Préparer les rapports et la soutenance ; aucun envoi de document n'est effectué.
+- Publier les deux branches et relire une PR lorsque Selyan le décide, selon
+  `docs/REPRISE.md`.
 
-1. Relire la nouvelle base à deux et convenir des choix listés dans le cahier des charges.
-2. Publier la branche d'archive et la branche rvsh depuis cette copie locale
-   (commandes dans `docs/REPRISE.md`), puis ouvrir et relire une PR vers `main`.
-3. Développer et valider les fonctionnalités sous Linux avec plusieurs terminaux.
-4. Préparer les rapports et confirmer le créneau de soutenance.
-
-Aucun push, changement de dépôt distant, fusion vers main, déploiement ou envoi de mail.
+Aucun push, fusion vers main, déploiement ou envoi de mail.

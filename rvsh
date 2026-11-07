@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
-# LO14 2026-2027 : point d'entrée du réseau virtuel.
-# Aucune commande reçue en argument n'est exécutée par le shell système.
+# LO14 2026-2027 : réseau virtuel en Bash, sans exécution de la saisie comme code.
+
+RVSH_PROJECT_DIR=$(CDPATH='' cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd) || exit 1
+# shellcheck source=lib/storage.sh
+source "$RVSH_PROJECT_DIR/lib/storage.sh"
+# shellcheck source=lib/session.sh
+source "$RVSH_PROJECT_DIR/lib/session.sh"
+# shellcheck source=lib/commands.sh
+source "$RVSH_PROJECT_DIR/lib/commands.sh"
 
 print_usage() {
     cat <<'USAGE'
@@ -9,60 +16,80 @@ Usage :
   rvsh -admin
   rvsh --help
 
-Base de départ : les sessions et l'authentification restent à développer.
+Au premier lancement de -admin, définir le mot de passe administrateur.
+Dans une session, saisir help pour afficher les commandes virtuelles.
 USAGE
 }
 
-usage_error() {
-    printf 'rvsh : %s\n' "$1" >&2
-    print_usage >&2
-    return 2
+usage_error() { fail "$1"; print_usage >&2; return 2; }
+
+authenticate() {
+    local user=$1 stored
+    with_lock load_hash "$user" || { fail 'authentification refusée.'; return 1; }
+    stored=$RVSH_HASH
+    read_password 'Mot de passe : ' || return 1
+    if ! password_matches "$stored" "$RVSH_PASSWORD"; then
+        unset RVSH_PASSWORD
+        fail 'authentification refusée.'
+        return 1
+    fi
+    unset RVSH_PASSWORD
+    RVSH_AUTH_HASH=$stored
 }
 
 run_connect() {
-    # À développer : vérification machine/utilisateur, droits et mot de passe,
-    # puis ouverture d'une session nom_utilisateur@nom_machine >.
-    printf '%s\n' 'rvsh : mode connect non implémenté (authentification et sessions à développer).' >&2
-    return 3
+    local host=$1 user=$2
+    if ! valid_name "$host" || ! valid_name "$user"; then fail "nom de machine ou d’utilisateur invalide."; return 1; fi
+    [[ $user != root ]] || { fail 'utiliser rvsh -admin pour le compte root.'; return 1; }
+    prepare_storage || return 1
+    [[ -f $RVSH_DATA_DIR/initialized ]] || { fail 'réseau non initialisé ; lancer rvsh -admin.'; return 1; }
+    with_lock can_access "$user" "$host" || { fail "machine, utilisateur ou droit d’accès invalide."; return 1; }
+    authenticate "$user" || return 1
+    RVSH_ADMIN=0
+    run_session "$user" "$host" "$RVSH_AUTH_HASH"
 }
 
 run_admin() {
-    # À développer : authentification administrateur avant root@hostroot >.
-    printf '%s\n' 'rvsh : mode admin non implémenté (authentification et gestion à développer).' >&2
-    return 3
+    local status
+    prepare_storage || return 1
+    if [[ ! -f $RVSH_DATA_DIR/initialized ]]; then
+        printf 'Initialisation du réseau virtuel : définir le mot de passe de root.\n'
+        new_password_hash || return 1
+        with_lock bootstrap_locked
+        status=$?
+        if [[ $status -eq 0 ]]; then
+            RVSH_AUTH_HASH=$RVSH_NEW_HASH
+            unset RVSH_NEW_HASH
+        elif [[ $status -eq 2 ]]; then
+            unset RVSH_NEW_HASH
+            authenticate root || return 1
+        else
+            unset RVSH_NEW_HASH
+            return 1
+        fi
+    else
+        authenticate root || return 1
+    fi
+    RVSH_ADMIN=1
+    run_session root hostroot "$RVSH_AUTH_HASH"
 }
 
 main() {
-    if [[ $# -eq 0 ]]; then
-        usage_error 'mode manquant.'
-        return 2
-    fi
-
+    [[ $# -gt 0 ]] || { usage_error 'mode manquant.'; return 2; }
     case "$1" in
         --help|-h)
-            if [[ $# -ne 1 ]]; then
-                usage_error 'l’aide ne prend aucun argument.'
-                return 2
-            fi
+            [[ $# -eq 1 ]] || { usage_error "l’aide ne prend aucun argument."; return 2; }
             print_usage
             ;;
         -connect)
-            if [[ $# -ne 3 || -z "$2" || -z "$3" ]]; then
-                usage_error '-connect attend un nom de machine et un nom d’utilisateur non vides.'
-                return 2
-            fi
+            [[ $# -eq 3 && -n $2 && -n $3 ]] || { usage_error "-connect attend un nom de machine et un nom d’utilisateur non vides."; return 2; }
             run_connect "$2" "$3"
             ;;
         -admin)
-            if [[ $# -ne 1 ]]; then
-                usage_error '-admin ne prend aucun argument.'
-                return 2
-            fi
+            [[ $# -eq 1 ]] || { usage_error '-admin ne prend aucun argument.'; return 2; }
             run_admin
             ;;
-        *)
-            usage_error "mode inconnu : $1"
-            ;;
+        *) usage_error "mode inconnu : $1" ;;
     esac
 }
 

@@ -1,8 +1,9 @@
 # Cahier des charges — LO14 2026–2027
 
 Source : `LO14-Projet-2026-2027.pdf`, conservé dans ce dossier. Ce document
-reformule les exigences ; le PDF reste la référence. Toutes les fonctions
-ci-dessous sont **à développer**, sauf l'analyse des arguments de lancement.
+reformule les exigences ; le PDF reste la référence. Les commandes
+ci-dessous sont implémentées. Leur validation automatisée est décrite dans le
+README et le rapport ; la démonstration manuelle à deux reste à effectuer.
 
 ## Modes de lancement
 
@@ -46,32 +47,30 @@ ci-dessous sont **à développer**, sauf l'analyse des arguments de lancement.
 - Les commandes inconnues du shell virtuel ne doivent pas devenir des commandes
   arbitraires du système hôte.
 
-## Ordre de travail proposé
+## Choix retenus pour cette version
 
-1. Valider le modèle des machines, comptes, droits et sessions ; choisir le
-   stockage et les règles de modification concurrente.
-2. Développer l'initialisation, l'authentification et le mode admin (`host`, `user`).
-3. Développer les sessions connect, puis `who`, `rusers`, `rhost`, `rconnect`, `exit`.
-4. Ajouter `su`, `passwd`, `finger`, `afinger`.
-5. Développer `write`, `wall` et la livraison différée de `wall -n`.
-6. Valider à plusieurs terminaux sous Linux et préparer les rapports/démonstrations.
+Ces points précisent le sujet ; ils ne sont pas des exigences supplémentaires de l'énoncé.
 
-Répartition possible, à valider entre vous : un membre sur comptes, machines,
-droits et administration ; l'autre sur sessions, navigation et messagerie.
-Les interfaces communes doivent être convenues avant cette séparation.
+- Stockage dans des fichiers locaux, choix validé directement par Selyan.
+- Verrou exclusif partagé `flock` pendant les lectures/modifications de l'état.
+- Machine `hostroot` et compte root créés au premier `rvsh -admin`, après choix
+  et confirmation du mot de passe ; aucune valeur prédéfinie.
+- Syntaxe détaillée des commandes documentée dans le README et `help`.
+- Mots de passe SHA-512 crypt avec sel aléatoire, calculés par OpenSSL.
+- Chaque connexion imbriquée conserve son enregistrement jusqu'à son `exit`.
+- `write` vise toutes les sessions du compte sur la machine indiquée.
+- `wall -n` diffuse à chaque session connectée et conserve un message par compte
+  entièrement hors ligne, consommé à sa première reconnexion.
+- Suppression de compte/machine et retrait d'un droit refusés s'ils sont utilisés.
+- `su` remplace l'utilisateur de la connexion courante. Un utilisateur ordinaire
+  ouvre le mode administrateur par `rvsh -admin`, pas par `su root`.
+- Notifications vérifiées toutes les 0,2 seconde, en arrière-plan.
 
-## Questions ouvertes avant implémentation
+## Suite à effectuer par le binôme
 
-Le sujet ne fixe pas tous les détails. Ne pas les présenter comme des exigences :
-
-- Syntaxe détaillée de `host`, `user`, `afinger` et paramètres de `rconnect`.
-- Initialisation du mot de passe administrateur ; stockage et vérification des
-  mots de passe, sans mot de passe de démonstration versionné.
-- Format de stockage, identification des sessions et gestion des accès concurrents.
-- Sessions A/B suspendues lors d'une connexion à C : visibilité dans `who` et `rusers`.
-- Destinataires de `write` lorsqu'un compte a plusieurs sessions sur la même machine.
-- Comportement si une machine ou un compte possédant des sessions actives est supprimé.
-- Délai de réception des messages et règles de livraison après reconnexion.
+- Revoir ensemble les règles ci-dessus et les confirmer avec l'enseignant si besoin.
+- Faire une démonstration manuelle dans votre Linux/WSL, avec deux terminaux.
+- Préparer les rapports et la présentation à partir du code réellement exécuté.
 
 ## Livrables et calendrier du sujet
 

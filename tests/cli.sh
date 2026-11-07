@@ -2,7 +2,7 @@
 # Vérifications du contrat de lancement, sans compte ni état persistant.
 set -eu
 
-project_dir=$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
+project_dir=$(CDPATH='' cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 checks=0
 
 expect() {
@@ -33,6 +33,4 @@ expect 2 'attend un nom' 'machine seule refusée' -connect hostroot
 expect 2 'attend un nom' 'machine vide refusée' -connect '' alice
 expect 2 'attend un nom' 'utilisateur vide refusé' -connect hostroot ''
 expect 2 'attend un nom' 'arguments superflus connect' -connect hostroot alice extra
-expect 3 'mode connect non implémenté' 'connect annonce son état réel' -connect hostroot alice
-expect 3 'mode admin non implémenté' 'admin annonce son état réel' -admin
 printf '%s vérifications réussies.\n' "$checks"

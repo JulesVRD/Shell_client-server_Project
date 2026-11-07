@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+# LO14 2026-2027 : point d'entrée du réseau virtuel.
+# Aucune commande reçue en argument n'est exécutée par le shell système.
+
+print_usage() {
+    cat <<'USAGE'
+Usage :
+  rvsh -connect nom_machine nom_utilisateur
+  rvsh -admin
+  rvsh --help
+
+Base de départ : les sessions et l'authentification restent à développer.
+USAGE
+}
+
+usage_error() {
+    printf 'rvsh : %s\n' "$1" >&2
+    print_usage >&2
+    return 2
+}
+
+run_connect() {
+    # À développer : vérification machine/utilisateur, droits et mot de passe,
+    # puis ouverture d'une session nom_utilisateur@nom_machine >.
+    printf '%s\n' 'rvsh : mode connect non implémenté (authentification et sessions à développer).' >&2
+    return 3
+}
+
+run_admin() {
+    # À développer : authentification administrateur avant root@hostroot >.
+    printf '%s\n' 'rvsh : mode admin non implémenté (authentification et gestion à développer).' >&2
+    return 3
+}
+
+main() {
+    if [[ $# -eq 0 ]]; then
+        usage_error 'mode manquant.'
+        return 2
+    fi
+
+    case "$1" in
+        --help|-h)
+            if [[ $# -ne 1 ]]; then
+                usage_error 'l’aide ne prend aucun argument.'
+                return 2
+            fi
+            print_usage
+            ;;
+        -connect)
+            if [[ $# -ne 3 || -z "$2" || -z "$3" ]]; then
+                usage_error '-connect attend un nom de machine et un nom d’utilisateur non vides.'
+                return 2
+            fi
+            run_connect "$2" "$3"
+            ;;
+        -admin)
+            if [[ $# -ne 1 ]]; then
+                usage_error '-admin ne prend aucun argument.'
+                return 2
+            fi
+            run_admin
+            ;;
+        *)
+            usage_error "mode inconnu : $1"
+            ;;
+    esac
+}
+
+main "$@"

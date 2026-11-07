@@ -1,2 +1,5 @@
-obj/
-bin/
+# État local et fichiers générés, à ne pas versionner.
+/data/
+/coverage/
+*.log
+.DS_Store

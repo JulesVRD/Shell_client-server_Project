@@ -1,6 +1,6 @@
 # Validation du réseau virtuel
 
-Ce document décrit la validation de l'implémentation `rvsh` au commit `5024581`.
+Ce document décrit la validation de l'implémentation `rvsh` au commit `9a56994`.
 Les changements documentaires suivants ne modifient pas le code exécuté.
 
 ## Environnement
@@ -32,20 +32,23 @@ comptes synthétiques et un dossier temporaire supprimé à sa fin.
 | Syntaxe Bash du lanceur, des modules et du test CLI | Valide. |
 | `shellcheck -x -a rvsh tests/cli.sh` | Code 0, aucun diagnostic. |
 | Vérifications de l'interface de lancement | 11 réussites. |
-| Scénarios d'intégration par pseudo-terminaux | 7 réussites en 6,033 secondes. |
+| Scénarios d'intégration par pseudo-terminaux | 10 réussites en 7,569 secondes. |
 
 Sortie de l'intégration :
 
 ```text
 test_connexions_imbriquees_su_et_mot_de_passe_global ... ok
 test_dossier_existant_etranger_refuse_sans_modification ... ok
+test_etat_persistant_apres_fermeture_et_reouverture ... ok
+test_fermeture_eof_int_et_hup_nettoie_les_sessions ... ok
 test_initialisation_authentification_et_permissions ... ok
 test_initialisation_incomplete_et_mode_sans_reseau ... ok
 test_modifications_concurrentes_et_session_tuee ... ok
+test_pid_vivant_reutilise_ne_conserve_pas_une_ancienne_session ... ok
 test_refus_droits_noms_et_suppression_en_cours ... ok
 test_sessions_multiples_messages_et_livraison_differee ... ok
 
-Ran 7 tests in 6.033s
+Ran 10 tests in 7.569s
 
 OK
 ```
@@ -66,17 +69,20 @@ OK
 ## Documentation
 
 Les trois schémas du README ont été analysés par `mermaid.parse`.
-Les neuf blocs Bash ont été vérifiés avec `bash -n` et les seize liens locaux
+Les neuf blocs Bash ont été vérifiés avec `bash -n` et les vingt liens locaux
 et ancres du README ont été contrôlés. Le rendu visuel GitHub n'a pas été inspecté.
 
 ## Limites et suite
 
-La simulation fonctionne sur un hôte partagé. Les processus sont identifiés par
-leur PID ; une réutilisation de PID ou un redémarrage peut nécessiter de vérifier
-les sessions résiduelles. Une notification peut couper visuellement le prompt.
+La simulation fonctionne sur un hôte partagé. Les sessions sont liées au PID,
+au démarrage du système et à celui du processus, lus dans `/proc`. Le test de
+régression écarte une entrée ancienne malgré un PID vivant et préserve la session
+légitime. Les anciennes entrées sans identité complète sont retirées : fermer
+les sessions avant une mise à jour. Une notification peut couper visuellement le prompt.
 
-La validation automatisée doit être complétée par une démonstration manuelle à
-deux sur votre Linux/WSL. Les choix de comportement du README restent à relire
+Une recette interactive a aussi été exécutée dans deux terminaux séparés, voir
+[le compte rendu](RECETTE.md). Le binôme doit encore répéter lui-même la
+démonstration sur son Linux/WSL. Les choix de comportement du README restent à relire
 ensemble lors de la démonstration et de la préparation des rapports.
 
 
@@ -86,3 +92,24 @@ Le projet courant est intégré dans `main` par avance rapide. L'ancien état de
 `main`, au commit `2a93ae5`, est conservé dans `archive-projet-2025`.
 La branche `feature/rvsh-2026-2027` est conservée. Cette opération et les mises
 à jour des liens ne modifient pas le code testé.
+
+
+## Finalisation et livrables
+
+Les corrections du cycle de vie des sessions et les documents sont préparés sur
+`finalisation/validation-et-livrables`, depuis `main` au commit `e995052`.
+Les rapports de travail sont disponibles sous `docs/rapports/` et exportés sous
+`livrables/`. Leurs 11 pages ont été rendues en images puis contrôlées visuellement :
+3 pages pour le rapport intermédiaire, 4 pour le rapport final et 4 pour le guide.
+Cette branche n'est pas fusionnée dans `main`.
+
+Export facultatif des documents, dans un environnement Python local :
+
+```bash
+python3 -m venv .venv-reports
+.venv-reports/bin/pip install -r tools/requirements-reports.txt
+.venv-reports/bin/python tools/export_reports.py
+```
+
+Les sources restent modifiables sans réécrire les PDF à la main. Vérifier les
+noms, les consignes de format et les résultats de la répétition avant remise.

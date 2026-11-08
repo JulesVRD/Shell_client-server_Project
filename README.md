@@ -57,7 +57,7 @@ git switch main
 git merge --ff-only origin/main
 ```
 
-**Environnement :** Linux ou WSL, Bash ≥ 3.2, OpenSSL avec `passwd -6`,
+**Environnement :** Linux ou WSL avec `/proc`, Bash ≥ 3.2, OpenSSL avec `passwd -6`,
 `flock` fourni par util-linux, et les outils usuels `grep`, `awk`, `tr`, `date`,
 `sleep`, `mkdir`, `mv` et `rm`. `make`, Python 3 et ShellCheck servent aux tests.
 Sur macOS, suivre la [méthode Docker](#docker).
@@ -260,7 +260,7 @@ data/                         # État local, ignoré par Git
 │   ├── password               # Hachage salé du mot de passe
 │   ├── grants                 # Machines autorisées
 │   └── info                   # Informations de finger
-├── sessions/<pid-numéro>      # Identité, machine, date/heure et PID
+├── sessions/<pid-numéro>      # Compte, machine, date/heure, PID et identité du processus
 ├── inbox/<pid-numéro>         # Messages des sessions connectées
 └── mail/<utilisateur>         # Messages différés
 ```
@@ -288,11 +288,11 @@ Règles retenues pour cette version :
 
 ## Tests
 
-| Contrôle | Résultat de la validation du code `5024581` |
+| Contrôle | Résultat de la validation du code `9a56994` |
 |---|---|
 | Syntaxe Bash | Vérifiée sur le lanceur, les modules et le test CLI. |
 | Interface de lancement | **11 vérifications réussies.** |
-| Intégration sous Linux | **7 scénarios réussis**, dont plusieurs terminaux simultanés. |
+| Intégration sous Linux | **10 scénarios réussis**, dont plusieurs terminaux simultanés. |
 | ShellCheck | Aucun diagnostic avec analyse des modules sourcés. |
 
 Les scénarios couvrent l'authentification, les droits, A → B → C et les retours,
@@ -348,7 +348,7 @@ docker stop rvsh-demo
 ## Limites connues
 
 - La simulation fonctionne sur **un même hôte** avec un stockage partagé. Elle ne crée ni compte Linux ni réseau TCP entre ordinateurs.
-- L'identification des processus repose sur les PID locaux. Une réutilisation de PID ou un redémarrage peut nécessiter de vérifier les sessions résiduelles.
+- L'identification vérifie le PID, le démarrage du système et celui du processus via `/proc`. Fermer les anciennes sessions avant une mise à jour : les enregistrements de l'ancien format sont retirés.
 - Après SIGKILL, les sessions dont le processus est mort sont retirées lors d'une consultation ou d'un envoi ; il n'y a pas de nettoyage instantané garanti.
 - Une notification peut couper visuellement le prompt pendant la saisie.
 - La validation automatisée reste à compléter par une démonstration manuelle à deux sur votre Linux/WSL.
@@ -360,7 +360,11 @@ docker stop rvsh-demo
 | [Sujet officiel](docs/LO14-Projet-2026-2027.pdf) | Énoncé LO14 2026–2027. |
 | [Cahier des charges](docs/CAHIER-DES-CHARGES.md) | Exigences et choix de comportement. |
 | [Guide de reprise](docs/REPRISE.md) | Historique, branches et récupération du projet. |
-| [Validation](docs/VALIDATION.md) | Travail réalisé, commandes de validation et limites. |
+| [Validation](docs/VALIDATION.md) | Commandes exécutées, résultats et limites. |
+| [Rapport intermédiaire](docs/rapports/rapport-intermediaire.md) | Structure, données et choix techniques à relire. |
+| [Rapport final technique](docs/rapports/rapport-final.md) | Fonctionnement, validation et limites de la version. |
+| [Guide de soutenance](docs/rapports/guide-soutenance.md) | Déroulé de 20 minutes, démonstration et questions de révision. |
+| [Documents PDF](livrables/) | Rapports et guide exportés pour relecture. |
 
 | Échéance du sujet | Livrable |
 |---|---|

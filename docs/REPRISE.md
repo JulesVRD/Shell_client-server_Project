@@ -6,9 +6,10 @@
 |---|---|
 | `main` | Projet LO14 2026–2027 : réseau virtuel `rvsh` en Bash. |
 | `archive-projet-2025` | Ancien serveur d'archives `vsh` en C, conservé sans modification. |
-| `feature/rvsh-2026-2027` | Branche de développement du nouveau projet, conservée après son intégration dans `main`. |
+| `feature/rvsh-2026-2027` | Branche de développement initiale, conservée après son intégration dans `main`. |
+| `finalisation/validation-et-livrables` | Corrections finales, recette et rapports préparés depuis `main`, à relire avant intégration. |
 
-Ces trois branches sont publiées sur GitHub. La branche d'archive pointe sur
+Les branches de référence et la branche de finalisation sont publiées sur GitHub. La branche d'archive pointe sur
 `2a93ae5616736f44fddcdc6c077420f8f71e81a0`, état de l'ancien projet avant la reprise.
 Les commits et leur attribution sont conservés. Le passage sur `main` est une
 avance rapide, sans réécriture de l'historique.

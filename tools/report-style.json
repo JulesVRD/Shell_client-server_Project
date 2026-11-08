@@ -1,0 +1,12 @@
+{
+  "colors": {
+    "ink": "#182635",
+    "muted": "#506375",
+    "accent": "#176B69",
+    "line": "#CCD8DE",
+    "surface": "#F2F6F7",
+    "paper": "#FFFFFF"
+  },
+  "type": {"body": 10.4, "leading": 15.0, "title": 27, "heading": 14.2, "code": 8.5},
+  "spacing": {"margin_mm": 19, "paragraph_after": 7}
+}

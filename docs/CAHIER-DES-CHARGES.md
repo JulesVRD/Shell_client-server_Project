@@ -65,6 +65,7 @@ Ces points précisent le sujet ; ils ne sont pas des exigences supplémentaires 
 - `su` remplace l'utilisateur de la connexion courante. Un utilisateur ordinaire
   ouvre le mode administrateur par `rvsh -admin`, pas par `su root`.
 - Notifications vérifiées toutes les 0,2 seconde, en arrière-plan.
+- Sessions liées au PID, au démarrage du système et à celui du processus pour détecter les PID réutilisés.
 
 ## Suite à effectuer par le binôme
 

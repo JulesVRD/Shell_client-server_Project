@@ -106,23 +106,40 @@ can_access() {
     [[ $user == root ]] || grep -Fxq -- "$host" "$RVSH_DATA_DIR/users/$user/grants"
 }
 
+# Le PID peut être réattribué. Le démarrage du système et celui du processus
+# permettent de distinguer deux processus ayant porté le même numéro.
+process_identity() {
+    local pid=$1 boot record
+    local fields=()
+    [[ $pid =~ ^[0-9]+$ && -r /proc/$pid/stat ]] || return 1
+    IFS= read -r boot < /proc/sys/kernel/random/boot_id || return 1
+    IFS= read -r record < "/proc/$pid/stat" || return 1
+    # Le nom entre parenthèses peut contenir des espaces ou des parenthèses.
+    record=${record##*) }
+    IFS=' ' read -r -a fields <<< "$record"
+    [[ ${#fields[@]} -ge 20 && ${fields[19]} =~ ^[0-9]+$ ]] || return 1
+    [[ ${fields[0]} != Z && ${fields[0]} != X ]] || return 1
+    printf '%s:%s\n' "$boot" "${fields[19]}"
+}
+
 prune_sessions() {
-    local file user host stamp pid
+    local file user host stamp pid owner actual
     for file in "$RVSH_DATA_DIR/sessions/"*; do
         [[ -f $file ]] || continue
-        IFS=$'\t' read -r user host stamp pid < "$file"
-        if [[ ! $pid =~ ^[0-9]+$ ]] || ! kill -0 "$pid" 2>/dev/null; then
+        IFS=$'\t' read -r user host stamp pid owner < "$file"
+        actual=$(process_identity "$pid")
+        if [[ -z $owner || -z $actual || $owner != "$actual" ]]; then
             rm -f -- "$RVSH_DATA_DIR/inbox/${file##*/}" "$file"
         fi
     done
 }
 
 has_session() {
-    local wanted_user=$1 wanted_host=$2 file user host stamp pid
+    local wanted_user=$1 wanted_host=$2 file user host stamp pid owner
     prune_sessions
     for file in "$RVSH_DATA_DIR/sessions/"*; do
         [[ -f $file ]] || continue
-        IFS=$'\t' read -r user host stamp pid < "$file"
+        IFS=$'\t' read -r user host stamp pid owner < "$file"
         if [[ ( -z $wanted_user || $user == "$wanted_user" ) && ( -z $wanted_host || $host == "$wanted_host" ) ]]; then return 0; fi
     done
     return 1

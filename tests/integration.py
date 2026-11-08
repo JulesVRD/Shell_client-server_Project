@@ -271,6 +271,54 @@ class NetworkTests(unittest.TestCase):
         self.assertNotIn('alice\tmachineA\t', admin.command('rusers'))
         self.assertEqual(len(list((self.data / 'sessions').iterdir())), 2)
 
+    def test_pid_vivant_reutilise_ne_conserve_pas_une_ancienne_session(self):
+        admin = self.admin()
+        sessions = self.data / 'sessions'
+        inbox = self.data / 'inbox'
+        # Ancien format : un PID vivant ne prouve pas que la session lui appartient.
+        (sessions / 'ancien-format').write_text(
+            f'root\thostroot\t2000-01-01 00:00:00\t{admin.process.pid}\n')
+        (sessions / 'mauvais-demarrage').write_text(
+            f'root\thostroot\t2000-01-01 00:00:00\t{admin.process.pid}\tfaux:0\n')
+        (inbox / 'ancien-format').write_text('message périmé\n')
+        listing = admin.command('rusers')
+        self.assertEqual(listing.count('root\thostroot\t'), 1)
+        self.assertFalse((sessions / 'ancien-format').exists())
+        self.assertFalse((sessions / 'mauvais-demarrage').exists())
+        self.assertFalse((inbox / 'ancien-format').exists())
+        record = next(sessions.iterdir()).read_text().strip().split('\t')
+        self.assertEqual(len(record), 5)
+        self.assertTrue(record[4])
+
+    def test_etat_persistant_apres_fermeture_et_reouverture(self):
+        admin = self.admin()
+        admin.command('host add machineA')
+        self.add_user(admin, 'alice')
+        admin.command('afinger alice Profil conservé après fermeture')
+        admin.command('wall -n Message conservé après fermeture')
+        admin.send('exit')
+        self.assertEqual(admin.process.wait(timeout=5), 0)
+        self.assertEqual(list((self.data / 'sessions').iterdir()), [])
+        reopened = self.admin(initial=False)
+        self.assertIn('machineA', reopened.command('rhost'))
+        user = self.connect()
+        self.assertIn('[wall -n] : Message conservé après fermeture', user.login_output)
+        self.assertIn('Profil conservé après fermeture', user.command('finger', 'alice@machineA > '))
+
+    def test_fermeture_eof_int_et_hup_nettoie_les_sessions(self):
+        admin = self.admin()
+        admin.command('host add machineA')
+        self.add_user(admin, 'alice')
+        for sig, status in ((signal.SIGINT, 130), (signal.SIGHUP, 129)):
+            user = self.connect()
+            user.process.send_signal(sig)
+            self.assertEqual(user.process.wait(timeout=5), status)
+            self.assertNotIn('alice\tmachineA\t', admin.command('rusers'))
+        user = self.connect()
+        os.write(user.master, b'\x04')
+        self.assertEqual(user.process.wait(timeout=5), 0)
+        self.assertNotIn('alice\tmachineA\t', admin.command('rusers'))
+
     def test_dossier_existant_etranger_refuse_sans_modification(self):
         self.data.mkdir(mode=0o755)
         marker = self.data / 'document-a-conserver'

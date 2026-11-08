@@ -17,9 +17,10 @@ current_identity() {
 push_session_locked() {
     local user=$1 host=$2 id
     can_access "$user" "$host" || { fail "machine, utilisateur ou droit d’accès invalide."; return 1; }
+    prune_sessions
     RVSH_SEQUENCE=$((RVSH_SEQUENCE + 1))
     id="$$-$RVSH_SEQUENCE"
-    printf '%s\t%s\t%s\t%s\n' "$user" "$host" "$(date '+%Y-%m-%d %H:%M:%S')" "$$" > "$RVSH_DATA_DIR/sessions/$id" || return 1
+    printf '%s\t%s\t%s\t%s\t%s\n' "$user" "$host" "$(date '+%Y-%m-%d %H:%M:%S')" "$$" "$RVSH_OWNER_ID" > "$RVSH_DATA_DIR/sessions/$id" || return 1
     RVSH_DEPTH=$((RVSH_DEPTH + 1))
     RVSH_IDS[RVSH_DEPTH]=$id
     RVSH_USERS[RVSH_DEPTH]=$user
@@ -58,11 +59,11 @@ cleanup() {
 }
 
 drain_messages_locked() {
-    local file user host stamp pid id
+    local file user host stamp pid owner id
     for file in "$RVSH_DATA_DIR/sessions/"*; do
         [[ -f $file ]] || continue
-        IFS=$'\t' read -r user host stamp pid < "$file"
-        [[ $pid == "$$" ]] || continue
+        IFS=$'\t' read -r user host stamp pid owner < "$file"
+        [[ $pid == "$$" && $owner == "$RVSH_OWNER_ID" ]] || continue
         id=${file##*/}
         if [[ -s $RVSH_DATA_DIR/inbox/$id ]]; then
             printf '\nMessages pour %s@%s :\n' "$user" "$host"
@@ -92,11 +93,11 @@ start_notifier() {
 }
 
 show_sessions_locked() {
-    local scope=$1 file user host stamp pid
+    local scope=$1 file user host stamp pid owner
     prune_sessions
     for file in "$RVSH_DATA_DIR/sessions/"*; do
         [[ -f $file ]] || continue
-        IFS=$'\t' read -r user host stamp pid < "$file"
+        IFS=$'\t' read -r user host stamp pid owner < "$file"
         [[ $scope == all || $host == "$RVSH_HOST" ]] || continue
         printf '%s\t%s\t%s\n' "$user" "$host" "$stamp"
     done
@@ -107,7 +108,7 @@ replace_user_locked() {
     if ! load_hash "$user" || [[ $RVSH_HASH != "$expected_hash" ]] || ! can_access "$user" "$RVSH_HOST"; then
         fail 'identité ou droits modifiés ; reconnexion refusée.'; return 1;
     fi
-    printf '%s\t%s\t%s\t%s\n' "$user" "$RVSH_HOST" "$(date '+%Y-%m-%d %H:%M:%S')" "$$" > "$RVSH_DATA_DIR/sessions/$id"
+    printf '%s\t%s\t%s\t%s\t%s\n' "$user" "$RVSH_HOST" "$(date '+%Y-%m-%d %H:%M:%S')" "$$" "$RVSH_OWNER_ID" > "$RVSH_DATA_DIR/sessions/$id"
     RVSH_USERS[RVSH_DEPTH]=$user
     current_identity
     deliver_offline "$user" "$id"
@@ -115,6 +116,7 @@ replace_user_locked() {
 
 run_session() {
     local line command arguments
+    RVSH_OWNER_ID=$(process_identity "$$") || { fail 'métadonnées de processus Linux indisponibles dans /proc.'; return 1; }
     RVSH_DEPTH=-1 RVSH_SEQUENCE=0
     RVSH_IDS=() RVSH_USERS=() RVSH_HOSTS=()
     trap cleanup EXIT

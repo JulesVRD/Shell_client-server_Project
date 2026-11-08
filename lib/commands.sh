@@ -89,6 +89,7 @@ command_host() {
 
 command_user() {
     require_admin || return 1
+    local status
     if [[ $# -eq 1 && $1 == list ]]; then with_lock list_users_locked; return; fi
     [[ $# -ge 2 ]] || { fail 'usage : user add|del|passwd nom ; user grant|revoke nom machine ; user list'; return 1; }
     case "$1" in
@@ -97,7 +98,9 @@ command_user() {
             # Ne pas immobiliser le stockage pendant une saisie de mot de passe.
             new_password_hash || return 1
             with_lock user_locked "$@"
+            status=$?
             unset RVSH_NEW_HASH
+            return "$status"
             ;;
         del)
             [[ $# -eq 2 ]] || { fail 'usage : user del utilisateur'; return 1; }
@@ -144,23 +147,26 @@ change_password_locked() {
 
 command_passwd() {
     [[ $# -eq 0 ]] || { fail 'usage : passwd'; return 1; }
-    local stored user=$RVSH_USER
+    local stored status user=$RVSH_USER
     with_lock load_hash "$user" || return 1
     stored=$RVSH_HASH
     read_password 'Mot de passe actuel : ' || return 1
     if ! password_matches "$stored" "$RVSH_PASSWORD"; then unset RVSH_PASSWORD; fail 'authentification refusée.'; return 1; fi
     unset RVSH_PASSWORD
     new_password_hash || return 1
-    if with_lock change_password_locked "$user" "$stored"; then printf 'Mot de passe modifié sur le réseau.\n'; fi
+    with_lock change_password_locked "$user" "$stored"
+    status=$?
+    if [[ $status -eq 0 ]]; then printf 'Mot de passe modifié sur le réseau.\n'; fi
     unset RVSH_NEW_HASH
+    return "$status"
 }
 
 write_message_locked() {
-    local target_user=$1 target_host=$2 message=$3 file user host stamp pid found=0
+    local target_user=$1 target_host=$2 message=$3 file user host stamp pid owner found=0
     prune_sessions
     for file in "$RVSH_DATA_DIR/sessions/"*; do
         [[ -f $file ]] || continue
-        IFS=$'\t' read -r user host stamp pid < "$file"
+        IFS=$'\t' read -r user host stamp pid owner < "$file"
         if [[ $user == "$target_user" && $host == "$target_host" ]]; then
             printf '%s@%s : %s\n' "$RVSH_USER" "$RVSH_HOST" "$message" >> "$RVSH_DATA_DIR/inbox/${file##*/}"
             found=1
@@ -170,7 +176,7 @@ write_message_locked() {
 }
 
 wall_locked() {
-    local offline=$1 message=$2 file user host stamp pid path
+    local offline=$1 message=$2 file user host stamp pid owner path
     prune_sessions
     # Un exemplaire par session connectée ; un exemplaire différé par compte hors ligne.
     for file in "$RVSH_DATA_DIR/sessions/"*; do

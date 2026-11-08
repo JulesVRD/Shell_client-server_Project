@@ -142,4 +142,38 @@ est actualisée et vérifiée.
 - Publier les deux branches et relire une PR lorsque Selyan le décide, selon
   `docs/REPRISE.md`.
 
-Aucun push, fusion vers main, déploiement ou envoi de mail.
+Lors de la tranche de développement initiale : aucun push, fusion vers main, déploiement ou envoi de mail.
+
+
+## Mise à jour documentaire — 8 novembre 2026
+
+Mandat direct : refaire le README GitHub en s'inspirant de la présentation de la
+stack Claude de Selyan, avec des schémas et une documentation claire.
+État initial : branche `codex/rvsh-2026-2027`, HEAD `5024581`, arbre propre,
+branche déjà publiée sur GitHub à la demande explicite de Selyan.
+
+- README restructuré : table « Je veux… », prise en main à deux terminaux,
+  responsabilités des modules, commandes, données, tests et limites.
+- Trois schémas Mermaid : architecture, connexions imbriquées et messagerie.
+- Exemples vérifiés contre le code, résultats des tests rattachés au commit validé.
+- Guide de reprise corrigé : la branche de développement est publiée ; la branche
+  d'archive reste locale. `main` contient toujours l'ancien sujet.
+- Seule la structure de présentation de la stack a été utilisée ; aucun détail
+  de son infrastructure personnelle n'a été repris dans le README.
+
+Validation exécutée avec Mermaid et jsdom installés uniquement dans le dossier
+temporaire de travail, sans dépendance ajoutée au projet ni installation globale :
+
+```text
+node work/readme-qa/check.mjs
+3 schémas Mermaid valides ; 9 blocs Bash valides ; 16 liens locaux et ancres valides.
+```
+
+Les schémas ont été analysés avec `mermaid.parse`, les blocs Bash avec `bash -n`,
+et les liens relatifs/ancres comparés aux fichiers et titres présents.
+`git diff --check` : sortie vide, code 0.
+Le rendu visuel dans GitHub n'a pas été inspecté. La suite fonctionnelle n'a pas
+été relancée : ce lot modifie uniquement trois fichiers Markdown.
+
+Publication prévue sur la branche existante `codex/rvsh-2026-2027`, selon le mandat
+de publication déjà donné ; aucune fusion vers `main`.

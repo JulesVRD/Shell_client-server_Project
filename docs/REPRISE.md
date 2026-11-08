@@ -28,10 +28,20 @@ git ls-tree -r --name-only archive/vsh-2025-2026
 git show archive/vsh-2025-2026:README.md
 ```
 
-## Publication par Selyan
+## Publication et récupération
 
-Aucune branche n'a été envoyée à GitHub. Depuis cette copie locale, Selyan peut,
-après revue, publier les deux branches :
+La branche `codex/rvsh-2026-2027` est publiée sur GitHub. `main` reste inchangée.
+La branche `archive/vsh-2025-2026` est conservée localement ; le même ancien
+code reste consultable sur `main` et dans l'historique distant.
+
+Pour récupérer la version actuelle dans un dossier neuf :
+
+```bash
+git clone --branch codex/rvsh-2026-2027 https://github.com/JulesVRD/Shell_client-server_Project.git
+```
+
+Depuis la copie de livraison, Selyan peut également publier l'archive locale
+et les mises à jour de la branche de développement :
 
 ```bash
 git push origin archive/vsh-2025-2026

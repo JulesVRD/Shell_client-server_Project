@@ -17,10 +17,10 @@ accès, de naviguer entre les machines et d'échanger des messages depuis plusie
 terminaux. Les données sont partagées dans un dossier local et persistent entre
 les lancements.
 
-> [!IMPORTANT]
-> Le sujet **2026–2027** est développé sur **`feature/rvsh-2026-2027`**.
-> `main` contient encore l'ancien serveur d'archives en C. Pour récupérer la bonne
-> version, utiliser les commandes de la prise en main ci-dessous.
+> [!NOTE]
+> **`main` contient le projet 2026–2027 : `rvsh` en Bash.**
+> L'ancien serveur d'archives en C est conservé sur
+> [`archive-projet-2025`](https://github.com/JulesVRD/Shell_client-server_Project/tree/archive-projet-2025).
 
 ## En bref
 
@@ -44,7 +44,7 @@ Les commandes sans `./rvsh` se saisissent **dans le shell virtuel**.
 ### 1. Récupérer le bon projet
 
 ```bash
-git clone --branch feature/rvsh-2026-2027 \
+git clone --branch main \
   https://github.com/JulesVRD/Shell_client-server_Project.git
 cd Shell_client-server_Project
 ```
@@ -53,7 +53,8 @@ Depuis un clone déjà présent, avec les modifications locales sauvegardées :
 
 ```bash
 git fetch origin
-git switch feature/rvsh-2026-2027
+git switch main
+git merge --ff-only origin/main
 ```
 
 **Environnement :** Linux ou WSL, Bash ≥ 3.2, OpenSSL avec `passwd -6`,
@@ -374,9 +375,10 @@ Le dépôt a été commencé sur le sujet 2025–2026 : un serveur d'archives `v
 Le bon sujet demande `rvsh` en Bash. Le travail précédent et son attribution ont
 été conservés dans l'historique, au commit
 [`2a93ae5`](https://github.com/JulesVRD/Shell_client-server_Project/commit/2a93ae5616736f44fddcdc6c077420f8f71e81a0),
-et dans une branche d'archive locale `archive/vsh-2025-2026`.
+et dans la branche publiée `archive-projet-2025`.
 
-La nouvelle implémentation se trouve sur `feature/rvsh-2026-2027`. Sa publication
-ne modifie pas `main` ; sa fusion devra être relue par le binôme.
+La nouvelle implémentation se trouve sur `main`. La branche
+`feature/rvsh-2026-2027` est conservée comme branche de développement.
+L'historique du binôme reste intégralement disponible.
 
 </details>

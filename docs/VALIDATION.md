@@ -77,4 +77,12 @@ les sessions résiduelles. Une notification peut couper visuellement le prompt.
 
 La validation automatisée doit être complétée par une démonstration manuelle à
 deux sur votre Linux/WSL. Les choix de comportement du README restent à relire
-ensemble avant la fusion de la branche de développement vers `main`.
+ensemble lors de la démonstration et de la préparation des rapports.
+
+
+## Organisation des branches — 8 novembre 2026
+
+Le projet courant est intégré dans `main` par avance rapide. L'ancien état de
+`main`, au commit `2a93ae5`, est conservé dans `archive-projet-2025`.
+La branche `feature/rvsh-2026-2027` est conservée. Cette opération et les mises
+à jour des liens ne modifient pas le code testé.

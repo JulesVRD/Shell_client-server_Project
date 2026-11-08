@@ -1,69 +1,66 @@
-# Reprise du dépôt
+# Branches et historique du projet
 
-## État conservé
+## Organisation actuelle
 
-Dépôt d'origine : https://github.com/JulesVRD/Shell_client-server_Project
+| Branche | Contenu |
+|---|---|
+| `main` | Projet LO14 2026–2027 : réseau virtuel `rvsh` en Bash. |
+| `archive-projet-2025` | Ancien serveur d'archives `vsh` en C, conservé sans modification. |
+| `feature/rvsh-2026-2027` | Branche de développement du nouveau projet, conservée après son intégration dans `main`. |
 
-Base vérifiée : `2a93ae5616736f44fddcdc6c077420f8f71e81a0`.
-Les deux commits historiques et leur attribution sont conservés.
+Ces trois branches sont publiées sur GitHub. La branche d'archive pointe sur
+`2a93ae5616736f44fddcdc6c077420f8f71e81a0`, état de l'ancien projet avant la reprise.
+Les commits et leur attribution sont conservés. Le passage sur `main` est une
+avance rapide, sans réécriture de l'historique.
 
-- `main` et `origin/main` : état récupéré du dépôt, inchangé localement.
-- `archive/vsh-2025-2026` : sauvegarde locale exacte de cet état, sans modification.
-- `feature/rvsh-2026-2027` : nouvelle base Bash, issue de cet historique.
-
-Les anciens fichiers sont retirés uniquement de la nouvelle branche. Ils restent
-consultables sur la branche d'archive et dans l'historique Git. Éviter toute
-réécriture d'historique ou envoi forcé.
-
-## Vérifier ou consulter
-
-Depuis cette copie locale :
+## Récupérer le projet actuel
 
 ```bash
-git status --short --branch
-git branch -v
-git log --oneline --all --decorate
-git ls-tree -r --name-only archive/vsh-2025-2026
-# Lire l'ancien README sans changer de branche :
-git show archive/vsh-2025-2026:README.md
+git clone --branch main https://github.com/JulesVRD/Shell_client-server_Project.git
+cd Shell_client-server_Project
 ```
 
-## Publication et récupération
-
-La branche `feature/rvsh-2026-2027` est publiée sur GitHub. `main` reste inchangée.
-La branche `archive/vsh-2025-2026` est conservée localement ; le même ancien
-code reste consultable sur `main` et dans l'historique distant.
-
-Pour récupérer la version actuelle dans un dossier neuf :
+Depuis un clone existant, après sauvegarde des modifications locales :
 
 ```bash
-git clone --branch feature/rvsh-2026-2027 https://github.com/JulesVRD/Shell_client-server_Project.git
+git fetch origin
+git switch main
+git merge --ff-only origin/main
 ```
 
-Depuis la copie de livraison, Selyan peut également publier l'archive locale
-et les mises à jour de la branche de développement :
+Si la dernière commande refuse une divergence, examiner les commits locaux
+avec le binôme avant de poursuivre ; ne pas forcer ni effacer le travail local.
+
+## Consulter l'ancien projet
+
+Dans un dossier neuf :
 
 ```bash
-git push origin archive/vsh-2025-2026
-git push -u origin feature/rvsh-2026-2027
+git clone --branch archive-projet-2025 \
+  https://github.com/JulesVRD/Shell_client-server_Project.git ancien-projet-lo14
 ```
 
-Créer ensuite une pull request de `feature/rvsh-2026-2027` vers `main`, à relire à
-deux avant fusion. Ne pas exécuter ces commandes dans un autre clone sans y
-avoir d'abord transféré les branches.
+Depuis un clone existant, sans changer de branche :
+
+```bash
+git fetch origin
+git show origin/archive-projet-2025:README.md
+```
+
+## Travailler à deux
+
+Partir de `main` à jour, puis créer une branche dédiée à la modification.
+Relire les changements ensemble avant leur intégration. L'archive doit rester
+une référence de l'ancien sujet.
 
 ## Copie transportable
 
-Le fichier `rvsh-reprise.bundle` livré à côté de ce dépôt contient les branches
-locales et l'historique. Pour travailler ailleurs, utiliser un dossier neuf :
+La sauvegarde locale `rvsh-reprise.bundle` contient les branches et l'historique.
+Pour la restaurer dans un dossier neuf :
 
 ```bash
-git clone -b feature/rvsh-2026-2027 /chemin/vers/rvsh-reprise.bundle rvsh-projet
+git clone -b main /chemin/vers/rvsh-reprise.bundle rvsh-projet
 cd rvsh-projet
 git remote set-url origin https://github.com/JulesVRD/Shell_client-server_Project.git
-# Le clone d'un bundle place aussi les autres branches dans origin/*.
-git branch archive/vsh-2025-2026 origin/archive/vsh-2025-2026
+git branch archive-projet-2025 origin/archive-projet-2025
 ```
-
-Le changement éventuel de nom du dépôt GitHub peut attendre ; il n'est pas
-nécessaire au démarrage du nouveau sujet.
